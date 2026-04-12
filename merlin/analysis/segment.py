@@ -133,6 +133,8 @@ class CellPoseSegment(FeatureSavingAnalysisTask):
             self.parameters['nuclear_channel'] = 'DAPI'
         if 'membrane_channel' not in self.parameters:
             self.parameters['membrane_channel'] == 'conA'
+        if 'high_pass_membrane_channel' not in self.parameters:
+            self.parameters['high_pass_membrane_channel'] = True
         if 'use_gpu' not in self.parameters:
             self.parameters['use_gpu'] = False
         if 'diameter' not in self.parameters:
@@ -186,9 +188,10 @@ class CellPoseSegment(FeatureSavingAnalysisTask):
         membrane_marker_image = self.scale_image(membrane_marker_image, 99.9)
         
         # Run the high-pass filter for the membrance channel
-        sigma = 5
-        truncate = 2
-        membrane_marker_image = self.high_pass_filter_individual_z(membrane_marker_image, sigma, truncate)
+        if self.parameters['high_pass_membrane_channel']:
+            sigma = 5
+            truncate = 2
+            membrane_marker_image = self.high_pass_filter_individual_z(membrane_marker_image, sigma, truncate)
          
         # Enhance the contrast by adaptive histogram equalization
         nuclear_image = self.adaptive_equalize_hist_individual_z(nuclear_image, clip_limit=0.05)
