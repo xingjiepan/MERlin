@@ -337,6 +337,14 @@ class AdaptiveFilterBarcodes(AbstractFilterBarcodes):
 
         if 'misidentification_rate' not in self.parameters:
             self.parameters['misidentification_rate'] = 0.05
+        if 'intensity_threshold_strong' not in self.parameters:
+            self.parameters['intensity_threshold_strong'] = 0
+        if 'intensity_threshold_weak' not in self.parameters:
+            self.parameters['intensity_threshold_weak'] = 0
+        if 'distance_threshold_strong' not in self.parameters:
+            self.parameters['distance_threshold_strong'] = 1e6
+        if 'distance_threshold_weak' not in self.parameters:
+            self.parameters['distance_threshold_weak'] = 1e6
 
     def fragment_count(self):
         return len(self.dataSet.get_fovs())
@@ -372,6 +380,16 @@ class AdaptiveFilterBarcodes(AbstractFilterBarcodes):
         bcDatabase = self.get_barcode_database()
         currentBarcodes = decodeTask.get_barcode_database()\
             .get_barcodes(fragmentIndex)
+        
+        # Apply strong and weak filters before applying the adaptive threshold
+        filter_mask = (
+            (currentBarcodes['mean_intensity'] >= self.parameters['intensity_threshold_strong']) 
+            | (currentBarcodes['min_distance'] <= self.parameters['distance_threshold_strong'])
+            | ((currentBarcodes['mean_intensity'] >= self.parameters['intensity_threshold_weak'])
+               & (currentBarcodes['min_distance'] <= self.parameters['distance_threshold_weak']))
+                       )
+        currentBarcodes = currentBarcodes[filter_mask].copy()
 
+        # Select barcodes passing the adaptive threshold
         bcDatabase.write_barcodes(adaptiveTask.extract_barcodes_with_threshold(
             threshold, currentBarcodes), fov=fragmentIndex)

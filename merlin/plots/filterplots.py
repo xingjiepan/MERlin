@@ -257,6 +257,10 @@ class AdaptiveFilterBarcodeDistributionPlots(AbstractPlot):
             plt.subplot(6, 4, 4*i+4)
             plt.imshow(blankFraction[:, :, i] < threshold, extent=plotExtent,
                        origin='lower', aspect='auto', cmap='OrRd')
+            plt.axvline(filterTask.parameters['distance_threshold_strong'], color='black', linestyle='--')
+            plt.axvline(filterTask.parameters['distance_threshold_weak'], color='black', linestyle='--')
+            plt.axhline(np.log10(filterTask.parameters['intensity_threshold_strong']), color='black', linestyle='--')
+            plt.axhline(np.log10(filterTask.parameters['intensity_threshold_weak']), color='black', linestyle='--')
             plt.ylabel('Mean intensity (log10)')
             plt.xlabel('Minimum distance')
             if i == 0:
