@@ -380,7 +380,7 @@ class CellPoseSegment(FeatureSavingAnalysisTask):
         stacked_images_cyto = np.stack((zero_images, membrane_images_pp, nuclear_images_pp), axis=3)
 
         # Load the cellpose model. 'cyto2' performs better than 'cyto'.
-        model_cyto = cellpose.models.Cellpose(gpu=self.parameters['use_gpu'], model_type='cyto2')
+        model_cyto = cellpose.models.CellposeModel(gpu=self.parameters['use_gpu'], model_type='cyto2')
 
         # Run the cellpose prediction using the nuclear and membrane stains
         masks_cyto, flows_cyto, styles_cyto, diams_cyto = model_cyto.eval(stacked_images_cyto, 
