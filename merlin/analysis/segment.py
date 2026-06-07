@@ -142,9 +142,9 @@ class CellPoseSegment(FeatureSavingAnalysisTask):
         if 'min_size' not in self.parameters:
             self.parameters['min_size'] = 200
         if 'combine_two_models' not in self.parameters:
-            self.parameters['combine_two_models'] = True
+            self.parameters['combine_two_models'] = False
         if 'dump_preprocessed_images' not in self.parameters:
-            self.parameters['dump_preprocessed_images'] = True
+            self.parameters['dump_preprocessed_images'] = False
         if 'dump_segmented_masks' not in self.parameters:
             self.parameters['dump_segmented_masks'] = True
 
@@ -380,7 +380,7 @@ class CellPoseSegment(FeatureSavingAnalysisTask):
         stacked_images_cyto = np.stack((zero_images, membrane_images_pp, nuclear_images_pp), axis=3)
 
         # Load the cellpose model. 'cyto2' performs better than 'cyto'.
-        model_cyto = cellpose.models.CellposeModel(gpu=self.parameters['use_gpu'], model_type='cyto2')
+        model_cyto = cellpose.models.Cellpose(gpu=self.parameters['use_gpu'], model_type='cyto2')
 
         # Run the cellpose prediction using the nuclear and membrane stains
         masks_cyto, flows_cyto, styles_cyto, diams_cyto = model_cyto.eval(stacked_images_cyto, 

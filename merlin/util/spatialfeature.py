@@ -442,7 +442,7 @@ class HDF5SpatialFeatureDB(SpatialFeatureDB):
     def _save_geometry_to_hdf5_group(h5Group: h5py.Group,
                                      polygon: geometry.Polygon) -> None:
         geometryDict = geometry.mapping(polygon)
-        h5Group.attrs['type'] = np.string_(geometryDict['type'])
+        h5Group.attrs['type'] = np.bytes_(geometryDict['type'])
         h5Group['coordinates'] = np.array(geometryDict['coordinates'])
 
     @staticmethod
@@ -451,7 +451,7 @@ class HDF5SpatialFeatureDB(SpatialFeatureDB):
                                     fov: int) -> None:
         featureKey = str(feature.get_feature_id())
         featureGroup = h5Group.create_group(featureKey)
-        featureGroup.attrs['id'] = np.string_(feature.get_feature_id())
+        featureGroup.attrs['id'] = np.bytes_(feature.get_feature_id())
         featureGroup.attrs['fov'] = fov
         featureGroup.attrs['bounding_box'] = \
             np.array(feature.get_bounding_box())
