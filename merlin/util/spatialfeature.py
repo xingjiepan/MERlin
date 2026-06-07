@@ -555,7 +555,7 @@ class HDF5SpatialFeatureDB(SpatialFeatureDB):
         """
         if fov is None:
             finalDF = pandas.concat([self.read_feature_metadata(x)
-                                     for x in self._dataSet.get_fovs()], 0)
+                                     for x in self._dataSet.get_fovs()], axis=0)
 
         else:
             try:
