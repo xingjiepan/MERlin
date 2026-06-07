@@ -114,7 +114,7 @@ class SpatialFeature(object):
         transformedList = []
         for b in boundaries:
             reshapedBoundaries = np.reshape(
-                b, (1, b.shape[0], 2)).astype(np.float)
+                b, (1, b.shape[0], 2)).astype(np.float64)
             transformedBoundaries = cv2.transform(
                 reshapedBoundaries, transformationMatrix)[0, :, :2]
             transformedList.append(transformedBoundaries)
@@ -315,7 +315,7 @@ class SpatialFeature(object):
         boundaries = self.get_boundaries()
         positionList[:, 2] = np.round(positionList[:, 2])
 
-        containmentList = np.zeros(positionList.shape[0], dtype=np.bool)
+        containmentList = np.zeros(positionList.shape[0], dtype=bool)
         
         if len(bounding_box) != 4:
             return containmentList
