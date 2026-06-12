@@ -393,10 +393,11 @@ class CellPoseSegment(FeatureSavingAnalysisTask):
             model_cyto = cellpose.models.Cellpose(gpu=self.parameters['use_gpu'], model_type='cyto2')
 
         # Run the cellpose prediction using the nuclear and membrane stains
-        masks_cyto, flows_cyto, styles_cyto, diams_cyto = model_cyto.eval(stacked_images_cyto, 
+        cellpose_outputs = model_cyto.eval(stacked_images_cyto, 
                                         diameter=self.parameters['diameter'], 
                                         do_3D=False, channels=self.parameters['channels'], 
                                         resample=True, min_size=self.parameters['min_size'])
+        masks_cyto = cellpose_outputs[0]
 
         # Run a separate segmentation using only the nuclear stain
         if self.parameters['combine_two_models']:
