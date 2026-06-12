@@ -137,8 +137,12 @@ class CellPoseSegment(FeatureSavingAnalysisTask):
             self.parameters['high_pass_membrane_channel'] = True
         if 'use_gpu' not in self.parameters:
             self.parameters['use_gpu'] = False
+        if 'model_path' not in self.parameters:
+            self.parameters['model_path'] = None
         if 'diameter' not in self.parameters:
             self.parameters['diameter'] = 60
+        if 'channels' not in self.parameters:
+            self.parameters['channels'] = [2, 3]
         if 'min_size' not in self.parameters:
             self.parameters['min_size'] = 200
         if 'combine_two_models' not in self.parameters:
@@ -167,7 +171,7 @@ class CellPoseSegment(FeatureSavingAnalysisTask):
         featureDB = self.get_feature_database()
         return featureDB.read_features()
 
-    def scale_image(self, img, saturation_percentile=99.9):
+    def scale_image(self, img, saturation_percentile=99.999):
         return np.minimum(img, np.percentile(img, saturation_percentile))
 
     def high_pass_filter_individual_z(self, image, sigma, truncate):
@@ -177,15 +181,14 @@ class CellPoseSegment(FeatureSavingAnalysisTask):
         gauss_highpass[lowpass > image] = 0
         return gauss_highpass
 
-    def adaptive_equalize_hist_individual_z(self, image, clip_limit=0.03):
+    def normalize_individual_z(self, image):
         image_normalized = [image[z] / np.max(image[z]) for z in range(image.shape[0])]
-        return np.array([exposure.equalize_adapthist(image_normalized[z], clip_limit=clip_limit) 
-                        for z in range(image.shape[0])])
+        return image_normalized
 
     def preprocess_image_channels(self, nuclear_image, membrane_marker_image):
         # Remove the hot-pixels
-        nuclear_image = self.scale_image(nuclear_image, 99.9)
-        membrane_marker_image = self.scale_image(membrane_marker_image, 99.9)
+        nuclear_image = self.scale_image(nuclear_image, 99.999)
+        membrane_marker_image = self.scale_image(membrane_marker_image, 99.999)
         
         # Run the high-pass filter for the membrance channel
         if self.parameters['high_pass_membrane_channel']:
@@ -194,8 +197,8 @@ class CellPoseSegment(FeatureSavingAnalysisTask):
             membrane_marker_image = self.high_pass_filter_individual_z(membrane_marker_image, sigma, truncate)
          
         # Enhance the contrast by adaptive histogram equalization
-        nuclear_image = self.adaptive_equalize_hist_individual_z(nuclear_image, clip_limit=0.05)
-        membrane_marker_image = self.adaptive_equalize_hist_individual_z(membrane_marker_image, clip_limit=0.05)
+        nuclear_image = self.normalize_individual_z(nuclear_image)
+        membrane_marker_image = self.normalize_individual_z(membrane_marker_image)
         
         return nuclear_image, membrane_marker_image
 
@@ -379,13 +382,20 @@ class CellPoseSegment(FeatureSavingAnalysisTask):
         zero_images = np.zeros(nuclear_images.shape)
         stacked_images_cyto = np.stack((zero_images, membrane_images_pp, nuclear_images_pp), axis=3)
 
-        # Load the cellpose model. 'cyto2' performs better than 'cyto'.
-        model_cyto = cellpose.models.Cellpose(gpu=self.parameters['use_gpu'], model_type='cyto2')
+        # Load the cellpose model. 
+        if not (self.parameters['model_path'] is None):
+            model_cyto = cellpose.models.CellposeModel(
+                gpu=self.parameters['use_gpu'],
+                pretrained_model=self.parameters['model_path']
+            )
+        else:
+            # 'cyto2' performs better than 'cyto'.
+            model_cyto = cellpose.models.Cellpose(gpu=self.parameters['use_gpu'], model_type='cyto2')
 
         # Run the cellpose prediction using the nuclear and membrane stains
         masks_cyto, flows_cyto, styles_cyto, diams_cyto = model_cyto.eval(stacked_images_cyto, 
                                         diameter=self.parameters['diameter'], 
-                                        do_3D=False, channels=[2, 3], 
+                                        do_3D=False, channels=self.parameters['channels'], 
                                         resample=True, min_size=self.parameters['min_size'])
 
         # Run a separate segmentation using only the nuclear stain
