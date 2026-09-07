@@ -147,6 +147,8 @@ class CellPoseSegment(FeatureSavingAnalysisTask):
             self.parameters['min_size'] = 200
         if 'combine_two_models' not in self.parameters:
             self.parameters['combine_two_models'] = False
+        if 'dump_raw_images' not in self.parameters:
+            self.parameters['dump_raw_images'] = False
         if 'dump_preprocessed_images' not in self.parameters:
             self.parameters['dump_preprocessed_images'] = False
         if 'dump_segmented_masks' not in self.parameters:
@@ -370,6 +372,10 @@ class CellPoseSegment(FeatureSavingAnalysisTask):
         # read images and perform segmentation
         nuclear_images = self._read_image_stack(fragmentIndex, nuclear_ids)
         membrane_images = self._read_image_stack(fragmentIndex, membrane_ids)
+
+        if self.parameters['dump_raw_images']:
+            self._save_tiff_images(fragmentIndex, 'raw_nuclear_images', nuclear_images)
+            self._save_tiff_images(fragmentIndex, 'raw_membrane_images', membrane_images)
 
         # preprocess the images 
         nuclear_images_pp, membrane_images_pp = self.preprocess_image_channels(nuclear_images, membrane_images)
